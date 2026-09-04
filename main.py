@@ -97,7 +97,7 @@ class weatherApp(QWidget):
         city = self.city_input.text().strip()
         
         if not city:
-            self.display_error("Veuillez entrer une ville")
+            self.display_error("Enter the city")
             return
 
 
