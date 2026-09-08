@@ -1,107 +1,161 @@
 import os
+import sys
+import requests
 from dotenv import load_dotenv
+from PyQt5.QtWidgets import (QApplication, QWidget, QLabel,
+                             QLineEdit, QPushButton, QVBoxLayout, QFrame)
+from PyQt5.QtCore import Qt
 
+# Load environment variables from .env file
 load_dotenv()
 api_key = os.getenv("OPENWEATHER_API_KEY") 
 
 
-
-
-
-
-import sys
-import requests
-from PyQt5.QtWidgets import (QApplication, QWidget, QLabel,
-                             QLineEdit, QPushButton, QVBoxLayout)
-from PyQt5.QtCore import Qt
-
 class weatherApp(QWidget):
     def __init__(self):
         super().__init__()
-        self.city_label = QLabel("Enter City Name: ", self)
-        self.city_input = QLineEdit(self)
-        self.get_weather_button = QPushButton("Get weather", self)
-        self.temperature_label = QLabel(self)
-        self.emoji_label = QLabel(self)
-        self.description_label = QLabel(self)
         self.initUI()
 
     def initUI(self):
         self.setWindowTitle("Weather App")  
-        self.setGeometry(700, 300, 400, 500)
+        
+        # Fixed window size to prevent stretching
+        self.setFixedSize(400, 620)
 
-        # Layout
-        vbox = QVBoxLayout()
-        vbox.addWidget(self.city_label)
-        vbox.addWidget(self.city_input)
-        vbox.addWidget(self.get_weather_button)
-        vbox.addWidget(self.temperature_label)
-        vbox.addWidget(self.emoji_label)
-        vbox.addWidget(self.description_label)
-
-        self.setLayout(vbox)
-
-        # Alignements
-        self.city_label.setAlignment(Qt.AlignCenter)
-        self.city_input.setAlignment(Qt.AlignCenter)
-        self.temperature_label.setAlignment(Qt.AlignCenter)
-        self.emoji_label.setAlignment(Qt.AlignCenter)
-        self.description_label.setAlignment(Qt.AlignCenter)
-
-        # Object Names
-        self.city_label.setObjectName("city_label")
-        self.city_input.setObjectName("city_input")
-        self.get_weather_button.setObjectName("get_weather_button")
-        self.temperature_label.setObjectName("temperature_label")
-        self.emoji_label.setObjectName("emoji_label")
-        self.description_label.setObjectName("description_label")
-
-        # Stylesheet
+        # ----------------------------------------------------
+        # 1. MODERN GLASSMORPHISM STYLESHEET
+        # ----------------------------------------------------
         self.setStyleSheet("""
-            QLabel, QPushButton {
-                font-family: calibri;
+            /* Main background gradient */
+            QWidget#main_window {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #0f172a, stop:0.5 #1e1b4b, stop:1 #311042);
+                font-family: 'Segoe UI', Roboto, sans-serif;
+                color: #ffffff;
             }
 
-            QLabel#city_label {
-                font-size: 40px;
-                font-style: italic;
-            }
-
+            /* Input Field */
             QLineEdit#city_input {
+                background-color: rgba(255, 255, 255, 0.08);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                border-radius: 20px;
+                padding: 12px 20px;
                 font-size: 30px;
+                color: #ffffff;
+            }
+            QLineEdit#city_input:focus {
+                border: 1.5px solid #a855f7;
+                background-color: rgba(255, 255, 255, 0.12);
             }
 
+            /* Modern Glowing Button */
             QPushButton#get_weather_button {
-                font-size: 25px;
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #6366f1, stop:1 #a855f7);
+                border: none;
+                border-radius: 20px;
+                padding: 12px;
+                font-size: 28px;
                 font-weight: bold;
+                color: #ffffff;
+            }
+            QPushButton#get_weather_button:hover {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #4f46e5, stop:1 #9333ea);
+            }
+            QPushButton#get_weather_button:pressed {
+                background-color: #4338ca;
             }
 
+            /* Glassmorphism Card */
+            QFrame#weather_card {
+                background-color: rgba(255, 255, 255, 0.06);
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                border-radius: 24px;
+            }
+
+            /* Result Labels */
+            QLabel#city_label {
+                font-size: 32px;
+                font-weight: 600;
+                color: #f3e8ff;
+            }
             QLabel#temperature_label {
-                font-size: 60px;
+                font-size: 64px;
+                font-weight: 800;
+                color: #ffffff;
             }
-
             QLabel#emoji_label {
-                font-size: 100px;
+                font-size: 95px;
                 font-family: "Segoe UI Emoji";
             }
-
             QLabel#description_label {
-                font-size: 35px;
+                font-size: 22px;
+                font-weight: 500;
+                color: #c084fc;
             }
         """)
 
+        # Set Object Name for main window styling
+        self.setObjectName("main_window")
+
+        # ----------------------------------------------------
+        # 2. WIDGET LAYOUTS
+        # ----------------------------------------------------
+        main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(30, 40, 30, 40)
+        main_layout.setSpacing(15)
+
+        # Input fields
+        self.city_input = QLineEdit(self)
+        self.city_input.setObjectName("city_input")
+        self.city_input.setPlaceholderText("Enter a city name...")
+        self.city_input.setAlignment(Qt.AlignCenter)
+
+        self.get_weather_button = QPushButton("Get Weather", self)
+        self.get_weather_button.setObjectName("get_weather_button")
+
+        main_layout.addWidget(self.city_input)
+        main_layout.addWidget(self.get_weather_button)
+
+        # Create the "Glassmorphism Card" frame to hold the results
+        self.card = QFrame(self)
+        self.card.setObjectName("weather_card")
+
+        card_layout = QVBoxLayout()
+        card_layout.setContentsMargins(20, 25, 20, 25)
+
+        self.city_label = QLabel(self)
+        self.city_label.setObjectName("city_label")
+
+        self.temperature_label = QLabel(self)
+        self.temperature_label.setObjectName("temperature_label")
+
+        self.emoji_label = QLabel(self)
+        self.emoji_label.setObjectName("emoji_label")
+
+        self.description_label = QLabel(self)
+        self.description_label.setObjectName("description_label")
+
+        # Center-align all result labels inside the card
+        for label in [self.city_label, self.temperature_label, self.emoji_label, self.description_label]:
+            label.setAlignment(Qt.AlignCenter)
+            card_layout.addWidget(label)
+
+        self.card.setLayout(card_layout)
+        main_layout.addWidget(self.card)
+
+        # Apply main layout
+        self.setLayout(main_layout)
+
+        # Connect button click signal to event handler
         self.get_weather_button.clicked.connect(self.get_weather)
 
     def get_weather(self):
-        
         city = self.city_input.text().strip()
         
         if not city:
-            self.display_error("Enter the city")
+            self.display_error("Please enter a city")
             return
 
-
-
+        # Request weather data with metric units and English language output
         url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric&lang=en"
 
         try:
@@ -115,27 +169,29 @@ class weatherApp(QWidget):
         except requests.exceptions.HTTPError:
             match response.status_code:
                 case 400:
-                    self.display_error("Requête invalide")
+                    self.display_error("Bad request")
                 case 401:
-                    self.display_error("Clé API non activée/invalide")
+                    self.display_error("Invalid API key")
                 case 404:
-                    self.display_error("Ville introuvable")
+                    self.display_error("City not found")
                 case _:
-                    self.display_error("Erreur HTTP")
+                    self.display_error("HTTP error occurred")
         except requests.exceptions.RequestException:
-            self.display_error("Erreur de connexion")
+            self.display_error("Connection error")
 
     def display_error(self, message):
-        self.temperature_label.setText(message)
-        self.emoji_label.setText("")
-        self.description_label.setText("")
+        self.city_label.setText("")
+        self.temperature_label.setText("")
+        self.emoji_label.setText("⚠️")
+        self.description_label.setText(message)
 
     def display_weather(self, data):
-        # Température directement en °C grâce à &units=metric
+        city_name = data["name"]
         temp_c = data["main"]["temp"]
         weather_id = data["weather"][0]["id"]
         description = data["weather"][0]["description"]
 
+        self.city_label.setText(city_name)
         self.temperature_label.setText(f"{temp_c:.1f}°C")
         self.description_label.setText(description.capitalize())
         self.emoji_label.setText(self.get_weather_emoji(weather_id))
