@@ -1,3 +1,5 @@
+![App preview]:[https://github.com/nada-megherbi/weather-app-pyqt5/blob/main/Screen%20Recording%202026-09-23%20115245.gif]
+
 # 🌤️ Weather App
 
 A desktop weather application built in Python using PyQt5 and the OpenWeatherMap API. It allows users to check real-time weather conditions for any city with a clean graphical user interface.
